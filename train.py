@@ -41,11 +41,12 @@ decoder = Decoder(TRG_VOCAB_SIZE, EMB_DIM, HID_DIM, N_LAYERS, DROPOUT, attention
 model = Seq2Seq(encoder, decoder, DEVICE).to(DEVICE)
 
 optimizer = optim.Adam(model.parameters())
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
 criterion = nn.CrossEntropyLoss(ignore_index=train_dataset.trg_vocab.word2idx["<pad>"])
 
 # -------------------- Resume Support --------------------
 RESUME = True
-RESUME_PATH = os.path.join(CHECKPOINT_DIR, "checkpoint_epoch_5.pt")  # Update to last saved
+RESUME_PATH = os.path.join(CHECKPOINT_DIR, "checkpoint_epoch_12.pt")  # Update to last saved
 
 start_epoch = 0
 if RESUME and os.path.exists(RESUME_PATH):
@@ -76,6 +77,7 @@ def train(model, loader, optimizer, criterion, clip):
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
+        scheduler.step()
 
         epoch_loss += loss.item()
         progress_bar.set_postfix(loss=loss.item())
